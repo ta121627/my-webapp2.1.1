@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>材料準備表</title>
+
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: sans-serif; background: #f0f0f0; min-height: 100vh; }
+.hidden { display: none !important; }
+#screen-home { max-width: 520px; margin: 0 auto; padding-bottom: 100px; }
+.home-header { background: #222; color: #fff; text-align: center; padding: 20px; font-size: 18px; font-weight: bold; letter-spacing: 0.1em; }
+.home-list { padding: 14px 14px 0; }
+.home-empty { text-align: center; color: #bbb; font-size: 14px; padding: 60px 0; }
+.card { background: #fff; margin-bottom: 10px; display: flex; align-items: stretch; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+.card-main { flex: 1; padding: 16px 14px; cursor: pointer; }
+.card-main:active { background: #f5f5f5; }
+.card-name { font-size: 17px; font-weight: bold; color: #222; margin-bottom: 4px; }
+.card-date { font-size: 11px; color: #aaa; }
+.card-del { background: none; border: none; border-left: 1px solid #eee; color: #ccc; font-size: 16px; padding: 0 18px; cursor: pointer; }
+.card-del:active { color: #e05050; }
+.home-fab { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); width: calc(min(520px, 96vw) - 28px); padding: 16px; background: #222; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.25); letter-spacing: 0.06em; }
+.home-fab:active { background: #444; }
+#screen-edit { display: none; max-width: 520px; margin: 0 auto; padding-bottom: 20px; }
+.edit-topbar { background: #222; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 50px; position: sticky; top: 0; z-index: 10; }
+.back-btn { background: none; border: none; color: #fff; font-size: 14px; cursor: pointer; padding: 8px 0; }
+.edit-title { font-size: 14px; color: #aaa; }
+.sheet { background: #fff; padding: 14px; }
+.site-label { font-size: 10px; color: #888; }
+#siteInput { width: 100%; font-size: 20px; font-weight: bold; border: none; border-bottom: 2px solid #333; outline: none; margin-bottom: 12px; padding: 2px 4px; }
+#siteInput::placeholder { color: #ccc; }
+.columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+th, td { border: 1px solid #ccc; padding: 2px 4px; font-size: 11px; }
+th { background: #eee; text-align: center; font-size: 12px; }
+.name-td { width: auto; }
+.qty-td { text-align: right; white-space: nowrap; width: 1%; padding-right: 4px; }
+.qty-td input.qty { width: 34px; font-size: 13px; font-weight: bold; text-align: center; border: 1px solid #ccc; padding: 1px 2px; vertical-align: middle; }
+.qty-td .unit { font-size: 10px; color: #555; margin-left: 2px; vertical-align: middle; }
+.del-td { width: 18px; text-align: center; padding: 0 2px; border-left: none; }
+.del { background: none; border: none; color: #bbb; font-size: 11px; cursor: pointer; padding: 0; }
+.del:hover { color: #e05050; }
+input.ni { width: 100%; font-size: 11px; border: 1px solid #ccc; padding: 1px 3px; }
+input.shaku { width: 28px; font-size: 12px; border: 1px solid #ccc; padding: 1px 2px; text-align: center; vertical-align: middle; }
+.add-btn { width: 100%; padding: 3px; font-size: 11px; cursor: pointer; background: #f9f9f9; border: 1px dashed #aaa; margin-bottom: 8px; color: #666; }
+.actions { padding: 10px 14px 0; display: flex; gap: 6px; flex-wrap: wrap; }
+.actions button { padding: 9px 14px; font-size: 13px; cursor: pointer; border: 1px solid #bbb; background: #f5f5f5; border-radius: 5px; }
+.btn-confirm { background: #444 !important; color: #fff !important; border-color: #444 !important; }
+#btn-edit { display: none; }
+body.confirmed .del { display: none !important; }
+body.confirmed .add-btn { display: none !important; }
+body.confirmed #btn-confirm { display: none; }
+body.confirmed #btn-edit { display: inline-block; }
+body.confirmed input.qty { border: none; border-bottom: 1px solid #bbb; background: transparent; font-weight: bold; }
+body.confirmed input.ni, body.confirmed input.shaku { border: none; border-bottom: 1px solid #bbb; background: transparent; }
+@media print {
+  @page { size: A4 portrait; margin: 10mm 12mm; }
+  body { background: #fff; }
+  #screen-home { display: none !important; }
+  #screen-edit { display: block !important; max-width: 100%; }
+  .edit-topbar, .actions, .add-btn, .del, .del-td { display: none !important; }
+  input { border: none !important; border-bottom: 0.5pt solid #999 !important; background: transparent !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="screen-home">
+  <div class="home-header">材料準備表</div>
+  <div class="home-list" id="home-list"></div>
+  <p class="home-empty" id="home-empty"></p>
+  <button class="home-fab" id="btn-new">＋ 新規作成</button>
+</div>
+
+<div id="screen-edit">
+  <div class="edit-topbar">
+    <button class="back-btn" id="btn-back">← 保存して戻る</button>
+    <span class="edit-title">材料準備表</span>
+    <span style="width:80px"></span>
+  </div>
+  <div class="sheet" id="sheet">
+    <div class="site-label">現場名</div>
+    <input id="siteInput" type="text" placeholder="現場名を入力">
+    <div class="columns">
+      <div>
+        <table id="kokan-table"><thead><tr><th colspan="3">鋼管</th></tr></thead><tbody id="kokan-body"></tbody></table>
+        <button class="add-btn" id="add-kokan">＋ 鋼管を追加</button>
+        <table id="kin-table"><thead><tr><th colspan="3">金物</th></tr></thead><tbody id="kin-body"></tbody></table>
+        <button class="add-btn" id="add-kin">＋ 金物を追加</button>
+        <table id="bata-table"><thead><tr><th colspan="3">バタ</th></tr></thead><tbody id="bata-body"></tbody></table>
+        <button class="add-btn" id="add-bata">＋ バタを追加</button>
+      </div>
+      <div>
+        <table id="sup-table"><thead><tr><th colspan="3">サポート</th></tr></thead><tbody id="sup-body"></tbody></table>
+        <button class="add-btn" id="add-sup">＋ サポートを追加</button>
+        <table id="sangi-table"><thead><tr><th colspan="3">桟木</th></tr></thead><tbody id="sangi-body"></tbody></table>
+        <button class="add-btn" id="add-sangi">＋ 桟木を追加</button>
+        <table id="dogu-table"><thead><tr><th colspan="3">道具</th></tr></thead><tbody id="dogu-body"></tbody></table>
+        <button class="add-btn" id="add-dogu">＋ 道具を追加</button>
+      </div>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn-confirm" id="btn-confirm">✔ 決定</button>
+    <button id="btn-edit">✎ 編集</button>
+    <button id="btn-reset">リセット</button>
+    <button id="btn-print">印刷 / PDF</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var LS_KEY = 'zairyo_v5';
+  var currentId = null;
+  var counts = { kokan:0, kin:0, bata:0, sup:0, sangi:0, dogu:0 };
+
+  function lsLoad() {
+    try { var r = localStorage.getItem(LS_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; }
+  }
+  function lsSave(arr) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch(e) {}
+  }
+
+  /* ── 画面切替 ── */
+  function showHome() {
+    document.getElementById('screen-edit').style.display = 'none';
+    document.getElementById('screen-home').style.display = 'block';
+    document.body.classList.remove('confirmed');
+    renderList();
+  }
+  function showEdit() {
+    document.getElementById('screen-home').style.display = 'none';
+    document.getElementById('screen-edit').style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+
+  /* ── ホーム一覧 ── */
+  function renderList() {
+    var tables = lsLoad();
+    var listEl = document.getElementById('home-list');
+    var emptyEl = document.getElementById('home-empty');
+    listEl.innerHTML = '';
+    if (tables.length === 0) {
+      emptyEl.textContent = '保存された表がありません';
+      return;
+    }
+    emptyEl.textContent = '';
+    tables.forEach(function (t) {
+      var card = document.createElement('div');
+      card.className = 'card';
+      var d = t.savedAt ? new Date(t.savedAt).toLocaleDateString('ja-JP') : '';
+      var main = document.createElement('div');
+      main.className = 'card-main';
+      main.innerHTML = '<div class="card-name">' + (t.siteName || '（現場名なし）') + '</div><div class="card-date">' + d + '</div>';
+      main.addEventListener('click', (function(id){ return function(){ openTable(id); }; })(t.id));
+      var del = document.createElement('button');
+      del.className = 'card-del';
+      del.textContent = '✕';
+      del.addEventListener('click', (function(id){ return function(){ deleteEntry(id); }; })(t.id));
+      card.appendChild(main);
+      card.appendChild(del);
+      listEl.appendChild(card);
+    });
+  }
+
+  function deleteEntry(id) {
+    if (!confirm('この表を削除しますか？')) return;
+    lsSave(lsLoad().filter(function(t){ return t.id !== id; }));
+    renderList();
+  }
+
+  function openTable(id) {
+    var t = lsLoad().find(function(x){ return x.id === id; });
+    if (!t) return;
+    currentId = id;
+    restoreFromData(t.data);
+    showEdit();
+  }
+
+  /* ── 新規作成 ── */
+  document.getElementById('btn-new').addEventListener('click', function () {
+    currentId = 't_' + Date.now();
+    buildDefaults();
+    showEdit();
+  });
+
+  /* ── 保存して戻る ── */
+  document.getElementById('btn-back').addEventListener('click', function () {
+    var tables = lsLoad();
+    var idx = tables.findIndex(function(x){ return x.id === currentId; });
+    var entry = {
+      id: currentId,
+      siteName: document.getElementById('siteInput').value.trim() || '（現場名なし）',
+      savedAt: new Date().toISOString(),
+      data: captureData()
+    };
+    if (idx >= 0) { tables[idx] = entry; } else { tables.unshift(entry); }
+    lsSave(tables);
+    showHome();
+  });
+
+  /* ── 行生成 ── */
+  function makeRow(type, i, fixedName) {
+    var tr = document.createElement('tr');
+    var qKey, nHtml, unit;
+    if (type === 'kokan') {
+      qKey = 'k'+i+'_q'; unit = '本';
+      nHtml = fixedName !== undefined
+        ? '<td class="name-td">'+fixedName+'</td>'
+        : '<td class="name-td"><input class="ni" type="text" data-key="k'+i+'_n" placeholder="寸法"></td>';
+    } else if (type === 'kin') {
+      qKey = 'n'+i+'_q'; unit = '袋';
+      nHtml = '<td class="name-td"><input class="ni" type="text" data-key="n'+i+'_n" placeholder="名前"></td>';
+    } else if (type === 'bata') {
+      qKey = 'b'+i+'_q'; unit = '本';
+      nHtml = '<td class="name-td"><input class="ni" type="text" data-key="b'+i+'_n" placeholder="名前"></td>';
+    } else if (type === 'sup') {
+      qKey = 's'+i+'_q'; unit = '本';
+      nHtml = '<td class="name-td"><input class="shaku" type="text" data-key="s'+i+'_s" placeholder="0">尺</td>';
+    } else if (type === 'sangi') {
+      qKey = 'sg'+i+'_q'; unit = '本';
+      nHtml = '<td class="name-td"><input class="ni" type="text" data-key="sg'+i+'_n" placeholder="寸法"></td>';
+    } else {
+      qKey = 'd'+i+'_q'; unit = '';
+      nHtml = '<td class="name-td"><input class="ni" type="text" data-key="d'+i+'_n" placeholder="道具名"></td>';
+    }
+    var unitSpan = unit ? '<span class="unit">'+unit+'</span>' : '';
+    tr.innerHTML = nHtml +
+      '<td class="qty-td"><input class="qty" type="number" min="0" data-key="'+qKey+'">' + unitSpan + '</td>' +
+      '<td class="del-td"><button class="del">✕</button></td>';
+    return tr;
+  }
+
+  function checkVis(type) {
+    var has = document.getElementById(type+'-body').querySelectorAll('tr').length > 0;
+    document.getElementById(type+'-table').style.display = has ? '' : 'none';
+  }
+
+  /* ── デフォルト構築 ── */
+  function buildDefaults() {
+    counts = { kokan:0, kin:0, bata:0, sup:0, sangi:0, dogu:0 };
+    ['kokan','kin','bata','sup','sangi','dogu'].forEach(function(t){
+      document.getElementById(t+'-body').innerHTML = '';
+    });
+    document.getElementById('siteInput').value = '';
+    document.body.classList.remove('confirmed');
+
+    var kb = document.getElementById('kokan-body');
+    ['4m','3.5m','3m','2.5m','2m','1.5m','1m'].forEach(function(n){
+      kb.appendChild(makeRow('kokan', counts.kokan++, n));
+    });
+
+    var nb = document.getElementById('kin-body');
+    ['ホームタイ','ダブル','足長','短足'].forEach(function(n){
+      var tr = makeRow('kin', counts.kin++);
+      tr.querySelector('input.ni').value = n;
+      nb.appendChild(tr);
+    });
+
+    document.getElementById('bata-body').appendChild(makeRow('bata', counts.bata++));
+
+    var sb = document.getElementById('sup-body');
+    for (var i = 0; i < 3; i++) sb.appendChild(makeRow('sup', counts.sup++));
+
+    document.getElementById('sangi-body').appendChild(makeRow('sangi', counts.sangi++));
+
+    var db = document.getElementById('dogu-body');
+    for (var j = 0; j < 10; j++) db.appendChild(makeRow('dogu', counts.dogu++));
+
+    ['kokan','kin','bata','sup','sangi','dogu'].forEach(checkVis);
+  }
+
+  /* ── キャプチャ ── */
+  function captureData() {
+    var data = { site: document.getElementById('siteInput').value, rows: {} };
+    ['kokan','kin','bata','sup','sangi','dogu'].forEach(function(type){
+      var rows = [];
+      document.getElementById(type+'-body').querySelectorAll('tr').forEach(function(tr){
+        var cells = {};
+        tr.querySelectorAll('[data-key]').forEach(function(el){ cells[el.dataset.key] = el.value; });
+        var nd = tr.querySelector('.name-td');
+        if (nd && !nd.querySelector('input')) cells['_fixed'] = nd.textContent.trim();
+        rows.push(cells);
+      });
+      data.rows[type] = rows;
+    });
+    return data;
+  }
+
+  /* ── 復元 ── */
+  function restoreFromData(data) {
+    counts = { kokan:0, kin:0, bata:0, sup:0, sangi:0, dogu:0 };
+    ['kokan','kin','bata','sup','sangi','dogu'].forEach(function(t){
+      document.getElementById(t+'-body').innerHTML = '';
+    });
+    document.body.classList.remove('confirmed');
+    if (!data) { buildDefaults(); return; }
+    document.getElementById('siteInput').value = data.site || '';
+    if (!data.rows) { buildDefaults(); return; }
+    ['kokan','kin','bata','sup','sangi','dogu'].forEach(function(type){
+      var saved = data.rows[type];
+      if (!saved) return;
+      var tbody = document.getElementById(type+'-body');
+      saved.forEach(function(cells){
+        var i = counts[type]++;
+        var tr = cells['_fixed'] ? makeRow('kokan', i, cells['_fixed']) : makeRow(type, i);
+        tbody.appendChild(tr);
+        Object.keys(cells).forEach(function(key){
+          if (key === '_fixed') return;
+          var el = tr.querySelector('[data-key="'+key+'"]');
+          if (el) el.value = cells[key];
+        });
+      });
+      checkVis(type);
+    });
+  }
+
+  /* ── 行削除 ── */
+  document.body.addEventListener('click', function(e){
+    var btn = e.target.closest('.del');
+    if (!btn) return;
+    var tr = btn.closest('tr');
+    var type = tr.closest('tbody').id.replace('-body','');
+    tr.remove();
+    checkVis(type);
+  });
+
+  /* ── 行追加 ── */
+  ['kokan','kin','bata','sup','sangi','dogu'].forEach(function(type){
+    document.getElementById('add-'+type).addEventListener('click', function(){
+      document.getElementById(type+'-body').appendChild(makeRow(type, counts[type]++));
+      checkVis(type);
+    });
+  });
+
+  /* ── Enter で次へ ── */
+  document.getElementById('sheet').addEventListener('keydown', function(e){
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    var inputs = Array.from(document.querySelectorAll('#sheet input'));
+    var idx = inputs.indexOf(e.target);
+    if (idx >= 0 && idx < inputs.length - 1) inputs[idx+1].focus();
+  });
+
+  /* ── 決定 / 編集 ── */
+  document.getElementById('btn-confirm').addEventListener('click', function(){ document.body.classList.add('confirmed'); });
+  document.getElementById('btn-edit').addEventListener('click', function(){ document.body.classList.remove('confirmed'); });
+
+  /* ── リセット ── */
+  document.getElementById('btn-reset').addEventListener('click', function(){
+    if (!confirm('この表の内容をリセットしますか？')) return;
+    buildDefaults();
+  });
+
+  document.getElementById('btn-print').addEventListener('click', function(){ window.print(); });
+
+  /* ── 起動 ── */
+  showHome();
+})();
+</script>
+</body>
+</html>
